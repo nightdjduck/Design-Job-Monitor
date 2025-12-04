@@ -13,5 +13,4 @@ ENV/
 .venv
 *.log
 .DS_Store
-jobs_data.json
 
