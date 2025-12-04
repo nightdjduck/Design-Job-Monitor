@@ -1,24 +1,28 @@
 """数据存储模块 - 记录已检测到的岗位"""
 import json
 import os
-from typing import Set, Dict, List
+from typing import Set, Dict, List, Tuple
 
 STORAGE_FILE = "jobs_data.json"
 
 
-def load_jobs() -> Dict[str, Set[str]]:
-    """加载已记录的岗位数据"""
+def load_jobs() -> Tuple[Dict[str, Set[str]], bool]:
+    """
+    加载已记录的岗位数据
+    Returns:
+        (data, file_exists): 数据字典和文件是否存在的布尔值
+    """
     if not os.path.exists(STORAGE_FILE):
-        return {}
+        return {}, False
     
     try:
         with open(STORAGE_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
             # 将列表转换为集合
-            return {company: set(jobs) for company, jobs in data.items()}
+            return {company: set(jobs) for company, jobs in data.items()}, True
     except Exception as e:
         print(f"加载数据失败: {e}")
-        return {}
+        return {}, False
 
 
 def save_jobs(jobs_data: Dict[str, Set[str]]):
@@ -44,4 +48,3 @@ def is_new_job(company: str, job_id: str, jobs_data: Dict[str, Set[str]]) -> boo
     if company not in jobs_data:
         return True
     return job_id not in jobs_data[company]
-

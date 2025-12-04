@@ -5,6 +5,7 @@ from scraper import JobScraper
 from telegram_notifier import TelegramNotifier
 from storage import load_jobs, save_jobs, add_job, is_new_job
 import config
+import asyncio
 
 
 def check_jobs():
@@ -14,7 +15,12 @@ def check_jobs():
     print(f"{'='*50}\n")
     
     # 加载已记录的岗位
-    jobs_data = load_jobs()
+    jobs_data, file_exists = load_jobs()
+    
+    # 如果文件不存在，说明是首次运行（或数据丢失）
+    is_first_run = not file_exists
+    if is_first_run:
+        print("⚠️ 检测到首次运行（或数据文件不存在），本次将初始化数据但不发送具体岗位通知。")
     
     # 初始化爬虫和通知器
     try:
@@ -49,12 +55,21 @@ def check_jobs():
                     job.get('link', '')
                 )
                 
-                if is_new_job(company_name, job_id, jobs_data):
-                    print(f"  ✨ 新岗位: {job['title']}")
-                    new_jobs_found.append(job)
+                # 判断是否为新岗位
+                is_new = is_new_job(company_name, job_id, jobs_data)
+                
+                if is_new:
+                    # 添加到数据记录
                     add_job(company_name, job_id, jobs_data)
+                    
+                    # 只有在非首次运行时，才加入发送列表
+                    if not is_first_run:
+                        print(f"  ✨ 新岗位: {job['title']}")
+                        new_jobs_found.append(job)
+                    else:
+                        print(f"  📝 初始化记录: {job['title']}")
                 else:
-                    # print(f"  ✓ 已存在: {job['title']}") # 减少日志输出
+                    # print(f"  ✓ 已存在: {job['title']}")
                     pass
         
         except Exception as e:
@@ -74,6 +89,15 @@ def check_jobs():
         print(f"\n发现 {len(new_jobs_found)} 个新岗位，正在发送通知...")
         notifier.send_notification_sync(new_jobs_found)
         print("通知发送完成！")
+    elif is_first_run:
+        print("\n首次运行初始化完成，已记录所有现有岗位。")
+        # 可选：发送一条初始化完成的消息
+        init_message = [{
+            'company': 'System',
+            'title': '监控系统初始化完成',
+            'link': 'https://github.com/nightdjduck/Design-Job-Monitor'
+        }]
+        notifier.send_notification_sync(init_message)
     else:
         print("\n未发现新岗位。")
     
