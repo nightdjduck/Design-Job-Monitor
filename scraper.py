@@ -68,7 +68,7 @@ class JobScraper:
             elif company_name == "Binance":
                 return self._scrape_binance(soup, keywords)
             elif company_name == "Bitget":
-                return self._scrape_bitget(soup, keywords)
+                return self._scrape_bitget(soup, keywords, url)
             elif company_name == "Bybit":
                 return self._scrape_bybit(soup, keywords)
             elif company_name == "Ethena.fi":
@@ -204,7 +204,7 @@ class JobScraper:
                     })
         return jobs
 
-    def _scrape_bitget(self, soup: BeautifulSoup, keywords: List[str]) -> List[Dict]:
+    def _scrape_bitget(self, soup: BeautifulSoup, keywords: List[str], base_url: str) -> List[Dict]:
         """抓取 Bitget (MokaHR)"""
         jobs = []
         # Bitget 使用 MokaHR，通常是 div 列表
@@ -219,8 +219,8 @@ class JobScraper:
                 title = title_elem.get_text(strip=True) if title_elem else text[:50]
                 
                 # 获取链接 (可能需要点击，或者直接分析 href)
-                # MokaHR 可能会用 JS 跳转，这里简化处理，如果没有链接就用当前页面
-                link = "https://www.bitget.com/en/careers" 
+                # MokaHR 可能会用 JS 跳转，这里直接使用列表页 URL
+                link = base_url
                 
                 if title not in seen:
                     seen.add(title)
