@@ -2,7 +2,7 @@ name: Design Job Monitor
 
 on:
   schedule:
-    - cron: '0 * * * *'  # 每小时运行一次
+    - cron: '0 */6 * * *'  # 每6小时运行一次
   workflow_dispatch:      # 允许手动触发
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
       env:
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        CHECK_INTERVAL_MINUTES: 60
+        CHECK_INTERVAL_MINUTES: 360
       run: python main.py
 
     - name: Commit and push if changes
